@@ -8,11 +8,11 @@ import pandas as pd
 #for notebook: !{sys.executable} -m pip install tabulate
 from tabulate import tabulate
 
-#########################
-#-----------------------#
-#----Gathering Pages----#
-#-----------------------#
-#########################
+##############################################
+#--------------------------------------------#
+#----Gathering Player Names and BRef URLs----#
+#--------------------------------------------#
+##############################################
 names_page = 'https://www.basketball-reference.com/leagues/NBA_2018_per_game.html'
 names_page_response = requests.get(names_page).text
 names_table = BeautifulSoup(names_page_response, 'html.parser').find('tbody')
@@ -42,6 +42,11 @@ def dedup_names(names_list, new_names_list):
 new_names_list = []
 dedup_names(data, new_names_list)
 
+######################################################
+#----------------------------------------------------#
+#--Scraping Player Data and Compiling Into One List--#
+#----------------------------------------------------#
+######################################################
 all_player_table = []
 for i in new_names_list:
     i = ''.join(i)
@@ -66,3 +71,10 @@ for i in new_names_list:
     print(player_data)
     all_player_table.append(player_data)
 
+# Get table column names
+url = 'https://www.basketball-reference.com/' + name_dict['Alex Abrines']
+page = requests.get(url).text
+soup = BeautifulSoup(page, 'html.parser')
+table_header = soup.find('div', attrs={'id': 'all_per_game'}).find('div', attrs={'class': 'table_outer_container'}).find('thead')
+table_header = table_header.find('tr')
+column_names = [ele.text.strip() for ele in table_header.find_all('th')]
