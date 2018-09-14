@@ -4,7 +4,7 @@ import sys
 from bs4 import BeautifulSoup
 import requests
 #for notebook: !{sys.executable} -m pip install pandas
-import pandas as pd
+#import pandas as pd
 #for notebook: !{sys.executable} -m pip install tabulate
 from tabulate import tabulate
 
@@ -68,7 +68,6 @@ for i in new_names_list:
         cols.insert(0, i)
         cols.insert(1, season_cols)
         player_data.append([ele for ele in cols if ele])
-    print(player_data)
     all_player_table.append(player_data)
 
 # Get table column names
@@ -78,3 +77,15 @@ soup = BeautifulSoup(page, 'html.parser')
 table_header = soup.find('div', attrs={'id': 'all_per_game'}).find('div', attrs={'class': 'table_outer_container'}).find('thead')
 table_header = table_header.find('tr')
 column_names = [ele.text.strip() for ele in table_header.find_all('th')]
+column_names.insert(0, 'Name')
+
+joined_player_table = []
+for counter, i in enumerate(all_player_table):
+	if counter == 0:
+		joined_player_table = all_player_table[counter]
+	else:
+		joined_player_table = joined_player_table + i
+joined_player_table.insert(0, column_names)
+
+player_df = pd.DataFrame(joined_player_table)
+player_df.to_csv("nba_scraped_player_data.csv")
