@@ -4,7 +4,7 @@ import sys
 from bs4 import BeautifulSoup
 import requests
 #for notebook: !{sys.executable} -m pip install pandas
-#import pandas as pd
+import pandas as pd
 #for notebook: !{sys.executable} -m pip install tabulate
 from tabulate import tabulate
 
@@ -30,7 +30,7 @@ for i in names_rows:
     cols = [ele.text.strip() for ele in cols]
     if cols != []:
         data.append([ele for ele in cols if ele])
-        name_dict[''.join(cols)] = dict_entry
+        name_dict[''.join(cols).encode('utf-8').strip()] = dict_entry
     else:
         continue
 
@@ -49,7 +49,7 @@ dedup_names(data, new_names_list)
 ######################################################
 all_player_table = []
 for i in new_names_list:
-    i = ''.join(i)
+    i = ''.join(i).encode('utf-8').strip()
     url = 'https://www.basketball-reference.com/' + name_dict[i]
     page = requests.get(url).text
     soup = BeautifulSoup(page, 'html.parser')
@@ -62,9 +62,10 @@ for i in new_names_list:
     for row in rows:
         season_cols = row.find_all('th')
         season_cols = [ele.text.strip() for ele in season_cols]
-        season_cols = ''.join(season_cols)
+        season_cols = ''.join(season_cols).encode('utf-8')
         cols = row.find_all('td')
         cols = [ele.text.strip() for ele in cols]
+        cols = [''.join(ele).encode('utf-8') for ele in cols]
         cols.insert(0, i)
         cols.insert(1, season_cols)
         player_data.append([ele for ele in cols if ele])
@@ -77,6 +78,7 @@ soup = BeautifulSoup(page, 'html.parser')
 table_header = soup.find('div', attrs={'id': 'all_per_game'}).find('div', attrs={'class': 'table_outer_container'}).find('thead')
 table_header = table_header.find('tr')
 column_names = [ele.text.strip() for ele in table_header.find_all('th')]
+column_names = [''.join(ele).encode('utf-8').strip() for ele in column_names]
 column_names.insert(0, 'Name')
 
 joined_player_table = []
