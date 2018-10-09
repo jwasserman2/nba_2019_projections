@@ -2,7 +2,10 @@ library(plyr)
 library(dplyr)
 library(ggplot2)
 library(rlang)
+library(plotly)
+setwd('~/Documents/R Codes & Datasets Full')
 scraped_data <- read.csv('nba_scraped_player_data.csv')
+setwd('~/Documents/R Codes & Datasets Full/nba_2019_projections')
 colnames(scraped_data)[1] <- 'player_season_id'
 
 
@@ -29,8 +32,6 @@ find_similar_col_values <- function(data1, data2, column){
 }
 player_data_abrines <- scraped_data %>% filter(Name == 'Alex Abrines') %>% filter(Age == 23)
 data_23_yo_not_abrines <- scraped_data %>% filter(Name != 'Alex Abrines', Age %in% player_data_abrines$Age) %>% .[1,]
-class::knn(sample_n(scraped_data, 2000), player_data_abrines)
-
 compare_value <- 15.5
 purrr::map(scraped_data %>% filter(Age == 23) %>% select(MP), function(x) x < compare_value + 1 & x > compare_value - 1)
 
@@ -41,7 +42,25 @@ scraped_data %>% group_by(Age) %>%
   ggplot(.) + geom_bar(aes(x = Age, y = pts), stat = 'identity') +
   theme_minimal()
 
-summary(lm(PTS ~ Age + Tm + Season + MP + FGA, data = scraped_data[!is.na(scraped_data$PTS),]))
+scraped_data %>% 
+  plotly::plot_ly(type = 'parcoords', line = list(color = ~Tm),
+                  dimensions = list(
+                    list(range = c(min(scraped_data$MP[!is.na(scraped_data$MP)]), max(scraped_data$MP[!is.na(scraped_data$MP)])),
+                         label = 'MP', values = ~MP),
+                    list(range = c(min(scraped_data$FG.[!is.na(scraped_data$FG.)]), max(scraped_data$FG.[!is.na(scraped_data$FG.)])),
+                         label = 'FG %', values = ~FG.),
+                    list(range = c(min(scraped_data$X3P.[!is.na(scraped_data$X3P.)]), max(scraped_data$X3P.[!is.na(scraped_data$X3P.)])),
+                         label = '3 PT %', values = ~X3P.)
+                  ))
 
-
-         
+log_pts_on_mp <- scraped_data %>%
+  filter_all(all_vars(!is.na(.))) %>%
+  mutate(Last_Name = paste0(sapply(strsplit(as.character(Name), " "), "[", 2))) %>%
+  ggplot(data = ., aes(label = Last_Name)) +
+  geom_point(aes(x = MP, y = log(PTS + 1), color = Season)) +
+  geom_text(aes(x = MP, y = log(PTS + 1), color = Season), size = 4)
+  
+cor(scraped_data %>%
+      filter_all(all_vars(!is.na(.))) %>% mutate(logPTS = log(PTS + 1)) %>%
+      select(logPTS), scraped_data %>%
+      filter_all(all_vars(!is.na(.))) %>% select(MP))
